@@ -1,13 +1,14 @@
 # J.A.R.V.I.S. — Dépendances Python
 # Installe tout avec : pip install -r requirements.txt
 
-# Synthèse vocale (text-to-speech, fonctionne offline sur Windows)
+# Synthèse vocale (offline sur Windows)
 pyttsx3==2.90
 
-# Reconnaissance vocale (speech-to-text)
+# Reconnaissance vocale
 SpeechRecognition==3.10.4
 
-# Accès au microphone (requis par SpeechRecognition)
-# Sur Windows, PyAudio peut nécessiter une installation spéciale.
-# Voir le fichier setup.bat pour la procédure complète.
+# Accès au microphone
 PyAudio==0.2.14
+
+# Requêtes HTTP (météo)
+requests>=2.28.0
