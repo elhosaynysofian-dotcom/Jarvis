@@ -20,6 +20,7 @@ import shutil
 import subprocess
 import sys
 
+import anthropic
 import pyttsx3
 import requests
 import speech_recognition as sr
@@ -29,7 +30,8 @@ import speech_recognition as sr
 #  CONFIGURATION  ← modifie ici selon tes préférences
 # ══════════════════════════════════════════════════════════════
 
-VILLE_DEFAUT = "Nimes"   # Ta ville par défaut pour la météo
+VILLE_DEFAUT   = "Nimes"            # Ta ville par défaut pour la météo
+CLE_API_CLAUDE = "VOTRE_CLE_ICI"   # Clé API Anthropic (console.anthropic.com)
 
 # Dossiers Windows courants
 APPDATA    = os.environ.get("APPDATA", "")
@@ -511,6 +513,41 @@ def trier_telechargements():
 
 
 # ══════════════════════════════════════════════════════════════
+#  INTELLIGENCE ARTIFICIELLE (CLAUDE)
+# ══════════════════════════════════════════════════════════════
+
+SYSTEM_PROMPT = """Tu es JARVIS, un assistant vocal intelligent sur le PC Windows de l'utilisateur.
+Réponds TOUJOURS en français.
+Tes réponses seront lues à voix haute : sois concis (2 à 3 phrases maximum).
+Pas de listes à puces, pas de markdown, pas de symboles spéciaux comme * ou #.
+Parle de façon naturelle, directe et élégante, comme un assistant premium."""
+
+def demander_claude(question):
+    """Envoie la question à Claude et lit la réponse à voix haute."""
+    if CLE_API_CLAUDE == "VOTRE_CLE_ICI" or not CLE_API_CLAUDE:
+        parler("La clé API Claude n'est pas configurée. Ajoute-la dans le fichier jarvis.py.")
+        return
+    try:
+        print("  [ Consultation de l'IA... ]\n")
+        client = anthropic.Anthropic(api_key=CLE_API_CLAUDE)
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=300,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": question}]
+        )
+        reponse = message.content[0].text.strip()
+        parler(reponse)
+    except anthropic.AuthenticationError:
+        parler("La clé API est invalide. Vérifie-la dans le fichier jarvis.py.")
+    except anthropic.APIConnectionError:
+        parler("Je ne peux pas joindre l'IA. Vérifie ta connexion internet.")
+    except Exception as e:
+        print(f"  [ERREUR Claude] {e}")
+        parler("Je n'ai pas pu obtenir une réponse de l'IA.")
+
+
+# ══════════════════════════════════════════════════════════════
 #  INTERPRÉTATION DES COMMANDES
 # ══════════════════════════════════════════════════════════════
 
@@ -592,9 +629,9 @@ def interpreter(commande):
         else:
             parler("Quelle application dois-je ouvrir ?")
 
-    # ── Commande non reconnue ─────────────────────────────────
+    # ── Intelligence artificielle (fallback universel) ────────
     else:
-        parler("Je n'ai pas encore cette capacité. Tu peux me demander : l'heure, la date, la météo, d'ouvrir une application ou un dossier, de chercher un fichier, ou de contrôler le volume.")
+        demander_claude(commande)
 
     return True
 
